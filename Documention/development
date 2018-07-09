@@ -1,0 +1,44 @@
+YOCB 开发文档
+
+特性
+  Block
+    块id，父块hash，时间戳，版本，块大小限制，同步标志，用户空间，交易空间，用户交易空间，块hash
+  Node
+    节点id（地址），节点描述，时间戳，节点状态（代理节点或者子节点），代理节点群空间，子节点群空间，节点hash，父节点地址，子节点地址组
+  Transaction
+    时间戳，交易数据，提供gas，交易状态，交易签名，交易来源，交易hash
+  Account
+    账户名，账户地址，账户公钥，时间戳，账户描述，账户余额，账户hash
+  Ac_Transaction
+    时间戳，交易hash，本次记录hash，gas消耗，gas来源，gas增加
+
+属性
+  Block
+    json_load json加载
+    json_parse json解析
+    genesis 根据默认配置文件生成创世区块
+    generate_block 生成同步块
+
+  Node
+    register 注册节点
+    child_count 返回子节点群数量
+    vote 选举成为代理节点
+
+  Transaction
+    json_load json加载
+    json_parse json解析
+    generate_transaction 创建交易
+    obtain_transaction 获取交易
+
+  Account
+    json_load json加载
+    json_parse json解析
+    generate_account 创建账户
+    obtain_balance 获取余额
+    obtain_account 获取注册信息
+
+  Ac_Transaction
+    json_load json加载
+    json_parse json解析
+    append_ac_transaction 添加一个交易
+    obtain_ac_transaction 返回一个交易（仅限增加gas）
