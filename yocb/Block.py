@@ -16,7 +16,8 @@ class Block(object):
         self.accounts = {}
         # key is transaction's hash, value is a transaction, be similar to account's transaction
         self.transactions = {}
-        # key is account's address, value is a list, the inner of list is transactions of the account, be similar to
+        # key is account's address, value is a map, the inner of map value is transaction's hash
+        # and value is account transaction
         # account's transaction
         self.ac_transactions = {}
         self.hash = None

@@ -28,38 +28,7 @@ YOCB 开发文档
   Account
     账户名，账户地址，账户公钥，时间戳，账户描述，账户余额，账户hash
   Ac_Transaction
-    时间戳，交易hash，本次记录hash，gas消耗，gas来源，gas增加
-
-属性
-  Block
-    json_load json加载
-    json_parse json解析
-    genesis 根据默认配置文件生成创世区块
-    generate_block 生成同步块
-
-  Node
-    register 注册节点
-    destroy 销毁节点
-    detect 判断连通
-
-  Transaction
-    json_load json加载
-    json_parse json解析
-    generate_transaction 创建交易
-    obtain_transaction 获取交易
-
-  Account
-    json_load json加载
-    json_parse json解析
-    generate_account 创建账户
-    obtain_balance 获取余额
-    obtain_account 获取注册信息
-
-  Ac_Transaction
-    json_load json加载
-    json_parse json解析
-    append_ac_transaction 添加一个交易
-    obtain_ac_transaction 返回一个交易（仅限增加gas）
+    交易地址，时间戳，交易hash，本次记录hash，gas消耗，gas来源，gas增加
 
 属性详解
   所有的json_parse json_load都是用于json操作，原理一样
@@ -96,4 +65,18 @@ YOCB 开发文档
     obtain_transaction 获取一个交易信息, 提供一个交易hash值和一个块，如果存在返回整个交易，不存在返回错误提示
 
   Account
+    generate_account 生成一个用户，需要提供姓名，地址，公钥，时间戳，描述
+    obtain_balance 提供一個地址和区块，判断区块是否包含这个账户交易 (未完成)
+    obtain_account 提供一个地址和区块，判断区块是否包含这个账户信息
+    generate_keys 随机生成keys
+    encrypt_message  加密信息
+    decrypt_message  解密信息
+    init_environment 判断环境
+    save_account 将用户信息加载到json文件中
+    load_account 从json文件加载用户
+    verify_user 判断用户是否合法
 
+  AcTransaction
+    append_ac_transaction 添加一个交易，需要提供地址，时间，消耗交易hash， gas消耗， gas来源，gas增加，其中
+        用户提交交易时gas增加为空，奖励用户交易时候消耗交易hash，gas消耗，gas来源为空
+    obtain_ac_transaction 仅限用户奖励的交易，提供地址，hash和block
