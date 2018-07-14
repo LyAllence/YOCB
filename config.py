@@ -1,6 +1,5 @@
-block_gas_limit = 100
-block_size_limit = 5000
-transaction_limit = 1000
+block_max_gas = 100
+block_max_size = 5000
 
 ip = '18.18.117.118'
 

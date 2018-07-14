@@ -1,0 +1,12 @@
+{
+  "index": 0,
+  "pre_block_hash": null,
+  "timestamp": null,
+  "version": "#version1",
+  "block_max_size": 5000,
+  "synchronized": false,
+  "accounts": "{}",
+  "transactions": "{}",
+  "ac_transactions": "{}",
+  "hash": null
+}

@@ -1,12 +1,30 @@
 YOCB 开发文档
 
+前瞻
+  所有的区块或者交易存储的时候必须格式化（可以被json dump）,比如block transaction 使用自己的解析函数，时间使用str
+  当生成块的时候，需要更新交易，所有交易都是已经确认的
+  节点注册时主要参与节点是代理节点，代理节点需要记录该节点的地址，同时父节点需要更新子节点群数量，并同步这个节点，
+  如果作为代理节点，需要更改每个节点的代理节点数，同时一个节点只能注册一次，且验证不需要时时的需要限制资源使用
+  所有的验证都需要达到半数以上才能认为验证通过，产生区块的时候应该需要验证一下算力，达不到要求的需要跳过，两次达不到要求的
+  需要重新选举出一个代理节点顶替到达不到要求的，都达不到则标记为不活跃节点，从其他的子节点群调用一个活跃节点过来代替
+  所有判断函数返回true or false，不参与后面的逻辑处理
+  所有方法共用状态码:
+    200成功 201该事件不应该在这里处理 400失败 300等待处理结果（一般用于查询）
+  一切皆事件，事件产生、销毁必须记录。节点操作不需要消耗gas
+  节点销毁，是谁的谁销毁，所有的状态变动都在成功销毁后统一变动
+  节点地址为http://ip:port
+  存储密钥的时候，存储的是decode之后的，字节数组不能dump
+
+总的数据存储
+  代理节点群 agent_nodes=[nodes' address] 所有的子节点群child_nodes={node's address: [nodes' address]}
+  区块存储 synchronized_block=[block] 临时存储区块storage_block
 特性
   Block
     块id，父块hash，时间戳，版本，块大小限制，同步标志，用户空间，交易空间，用户交易空间，块hash
   Node
-    节点id（地址），节点描述，时间戳，节点状态（代理节点或者子节点），代理节点群空间，子节点群空间，节点hash，父节点地址，子节点地址组
+    节点id（地址），节点描述，时间戳，节点状态（代理节点或者子节点），代理节点数量，子节点群数量，节点hash，父节点地址，子节点地址组
   Transaction
-    时间戳，交易数据，提供gas，交易状态，交易签名，交易来源，交易hash
+    时间戳，交易数据，提供gas，交易状态，交易签名，交易来源，最后消耗，交易hash
   Account
     账户名，账户地址，账户公钥，时间戳，账户描述，账户余额，账户hash
   Ac_Transaction
@@ -21,8 +39,8 @@ YOCB 开发文档
 
   Node
     register 注册节点
-    child_count 返回子节点群数量
-    vote 选举成为代理节点
+    destroy 销毁节点
+    detect 判断连通
 
   Transaction
     json_load json加载
@@ -42,3 +60,40 @@ YOCB 开发文档
     json_parse json解析
     append_ac_transaction 添加一个交易
     obtain_ac_transaction 返回一个交易（仅限增加gas）
+
+属性详解
+  所有的json_parse json_load都是用于json操作，原理一样
+  Block
+    genesis： 从一个json文件读取配置，json文件格式如下
+    {
+        "index": 0,
+        "pre_block_hash": null,
+        "timestamp": null,
+        "version": "#version1",
+        "block_max_size": 5000,
+        "synchronized": false,
+        "accounts": "{}",
+        "transactions": "{}",
+        "ac_transactions": "{}",
+        "hash": null
+    }
+
+    generate_block： 生成一个新的块，作为一个临时未验证块，里面只包含了自身的索引和父hash。
+    等同步的时候再将其他信息update上去。
+
+  Node
+    register： 注册节点，提供地址，信息等必要的东西，后面是否是代理节点需要判断后自动update
+
+    destroy： 销毁节点，当一个节点网络出错或者其他原因导致异常的时候。销毁该节点。销毁操作只在本节点执行，
+      然后将结果广播，其他节点接收到广播，如果没有销毁的，执行销毁函数。销毁时节点分为两种。该节点是代理节点。
+      删除代理节点群里面信息，代理节点群数量减一，如果不是，删除子节点群里面信息，子节点数量减一，需要注意的是
+      如果是子节点，但是不是本节点的节点群，需要外抛
+
+    detect： 检测节点是否正确，检测连通问题以及合法问题
+
+  Transaction
+    generate_transaction 创建一个交易，需要提供时间，交易数据，gas，gas来源，gas最后消耗
+    obtain_transaction 获取一个交易信息, 提供一个交易hash值和一个块，如果存在返回整个交易，不存在返回错误提示
+
+  Account
+
