@@ -14,13 +14,12 @@ YOCB 开发文档
   节点销毁，是谁的谁销毁，所有的状态变动都在成功销毁后统一变动
   节点地址为http://ip:port
   存储密钥的时候，存储的是decode之后的，字节数组不能dump
+  由于是使用dpos来产生区块，所以不存在区块冲突问题
 
-总的数据存储
-  代理节点群 agent_nodes=[nodes' address] 所有的子节点群child_nodes={node's address: [nodes' address]}
-  区块存储 synchronized_block=[block] 临时存储区块storage_block
+
 特性
   Block
-    块id，父块hash，时间戳，版本，块大小限制，同步标志，用户空间，交易空间，用户交易空间，块hash
+    块id，父块hash，时间戳，版本，块大小限制，同步标志，用户空间，交易空间，用户交易空间，块hash， 出块标志,算力达标标志
   Node
     节点id（地址），节点描述，时间戳，节点状态（代理节点或者子节点），代理节点数量，子节点群数量，节点hash，父节点地址，子节点地址组
   Transaction
@@ -80,3 +79,69 @@ YOCB 开发文档
     append_ac_transaction 添加一个交易，需要提供地址，时间，消耗交易hash， gas消耗， gas来源，gas增加，其中
         用户提交交易时gas增加为空，奖励用户交易时候消耗交易hash，gas消耗，gas来源为空
     obtain_ac_transaction 仅限用户奖励的交易，提供地址，hash和block
+
+tools
+  数据
+    代理节点群 agent_nodes=[nodes' address] 所有的子节点群child_nodes={node's address: [nodes' address]}
+    区块存储 synchronized_block=[block] 临时存储区块storage_block 确认中交易集合confirming_transaction={'hash': transaction}
+    已确认交易 confirmed_transaction={'hash': transaction} 本地节点 local_node
+  属性
+    NodeTools
+      register() 注册到网络
+
+    BlockTools
+      generate_block() 生成一个临时块。用于存储交易(由于传输的时候需要规范化，所以这里用json解析)，返回一个block
+      genesis() 根据json文件生成创世区块
+      append_synchronized_block() 添加同步区块
+      rollback() 根据时间回滚区块
+      inspect_genesis 判断两个文件是否相等，使用hashlib.md5()来检验，需要传入的是一个文件的内容，使用readlines获取内容传输
+
+    AccountTools
+      inspect_environment（）检测当前用户环境是否正确
+      register（）注册用户
+    TransactionTools
+    Network
+      send_message_with_requests() 同步发送http请求（使用requests）
+      send_message_with_tornado()  异步发送http请求（使用tornado）
+
+
+handle
+  BlockHandle
+
+
+http request:
+  get：
+    / 主页
+    /block/get？index=x index 为区块的索引
+    /block/vote
+  post：
+    / 主页
+    /block/sync data为md5 和 区块
+
+http response:
+  get:
+    / 欢迎语
+  /block/get 获取第x块的信息，如果不指定number，则获取最近100块的信息
+  post：
+    / 欢迎语
+    /block/sync 首先判断这个网络连接是否有效，判断ip是否在范围内，
+                先判断这个区块是不是正确的，
+                是不是产生了丢包现象。如果产生丢包，丢弃这块，并将自身和父节点同步
+
+
+
+运行程序
+  检查本地网络是否连通，检查参数是否合理，检查创世区块是否合理
+  初始化参数，本地节点 地址，http://ip:port
+                    描述：this is a common node with address is $address
+                    时间戳：str
+                    状态：代理节点 agent
+                    hash：调用函数即可
+                    由于没有注册，这个只是一个单节点，所以其他参数都使用原始的，
+             初始化_variable 由于现在还是单节点， 所以
+                    agent_nodes = [local address]
+                    storage_block = new block
+
+功能实现(chain client)
+  挖矿 使用线程的定时器，每次生成前检验一下自己有没有生成权限，有就生成,生成时需要更新storage block的信息（hash，index），没有就跳过这一次，每次同步之后，
+       由生成块的节点发起状态更新的请求，所有节点update state
